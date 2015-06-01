@@ -40,10 +40,17 @@ class NotificationPlugin(Component):
         if comment == '':
             return False
 
+        notify_symbol = self._get_notify_symbol()
+        if notify_symbol != '' and notify_symbol in comment:
+            return True
+
         if self._only_owner_changed() and 'owner' not in old_values:
             return False
 
         return True
+
+    def _get_notify_symbol(self):
+        return self._get_config('notify_symbol')
 
     def _only_owner_changed(self):
         return self._get_bool_config('only_owner_changed')
