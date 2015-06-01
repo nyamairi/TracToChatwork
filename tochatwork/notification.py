@@ -18,7 +18,7 @@ class NotificationPlugin(Component):
 {description}""".format(reporter=ticket['reporter'], owner=ticket['owner'], description=ticket['description']))
 
     def ticket_changed(self, ticket, comment, author, old_values):
-        if comment == '':
+        if not self._should_notify(ticket, comment, author, old_values):
             return
 
         self._post_info(ticket, """チケットが更新されました 更新者: {author} 担当者: {owner} ステータス: {status}
@@ -35,6 +35,18 @@ class NotificationPlugin(Component):
 
     def ticket_change_deleted(self, ticket, cdate, changes):
         pass
+
+    def _should_notify(self, ticket, comment, author, old_values):
+        if comment == '':
+            return False
+
+        if self._only_owner_changed() and 'owner' not in old_values:
+            return False
+
+        return True
+
+    def _only_owner_changed(self):
+        return self._get_bool_config('only_owner_changed')
 
     def _post_info(self, ticket, body):
         trac_base_url = self.config.get('trac', 'base_url')
@@ -61,5 +73,5 @@ class NotificationPlugin(Component):
     def _get_config(self, key):
         return self.config.get(CONFIG_SECTION, key)
 
-    def _get_bool_config(self, key):
-        return self.config.get
+    def _get_bool_config(self, key, default=''):
+        return self.config.getbool(CONFIG_SECTION, key, default)
