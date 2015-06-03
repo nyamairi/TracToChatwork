@@ -23,7 +23,7 @@ class NotificationPlugin(Component):
 
         self._post_info(ticket, """チケットが更新されました 更新者: {author} 担当者: {owner} ステータス: {status}
 
-コメント: {comment}""".format(author=author, owner=ticket['owner'], comment=comment, status=ticket['status']))
+{comment}""".format(author=author, owner=ticket['owner'], comment=comment, status=ticket['status']))
 
     def ticket_deleted(self, ticket):
         pass
@@ -31,7 +31,7 @@ class NotificationPlugin(Component):
     def ticket_comment_modified(self, ticket, cdate, author, comment, old_comment):
         self._post_info(ticket, """チケットのコメントが更新されました 更新者: {author} 担当者: {owner}
 
-新コメント: {comment}""".format(author=author, owner=ticket['owner'], comment=comment))
+{comment}""".format(author=author, owner=ticket['owner'], comment=comment))
 
     def ticket_change_deleted(self, ticket, cdate, changes):
         pass
