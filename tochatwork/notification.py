@@ -13,25 +13,28 @@ class NotificationPlugin(Component):
     implements(ITicketChangeListener)
 
     def ticket_created(self, ticket):
-        self._post_info(ticket['reporter'], ticket, """チケットが登録されました 報告者: {reporter} 担当者: {owner}
+        body = """チケットが登録されました 報告者: {reporter} 担当者: {owner}
 
-{description}""".format(reporter=ticket['reporter'], owner=ticket['owner'], description=ticket['description']))
+{description}""".format(reporter=ticket['reporter'], owner=ticket['owner'], description=ticket['description'])
+        self._post_info(ticket['reporter'], ticket, body)
 
     def ticket_changed(self, ticket, comment, author, old_values):
         if not self._should_notify(ticket, comment, author, old_values):
             return
 
-        self._post_info(author, ticket, """チケットが更新されました 更新者: {author} 担当者: {owner} ステータス: {status}
+        body = """チケットが更新されました 更新者: {author} 担当者: {owner} ステータス: {status}
 
-{comment}""".format(author=author, owner=ticket['owner'], comment=comment, status=ticket['status']))
+{comment}""".format(author=author, owner=ticket['owner'], comment=comment, status=ticket['status'])
+        self._post_info(author, ticket, body)
 
     def ticket_deleted(self, ticket):
         pass
 
     def ticket_comment_modified(self, ticket, cdate, author, comment, old_comment):
-        self._post_info(author, ticket, """チケットのコメントが更新されました 更新者: {author} 担当者: {owner}
+        body = """チケットのコメントが更新されました 更新者: {author} 担当者: {owner}
 
-{comment}""".format(author=author, owner=ticket['owner'], comment=comment))
+{comment}""".format(author=author, owner=ticket['owner'], comment=comment)
+        self._post_info(author, ticket, body)
 
     def ticket_change_deleted(self, ticket, cdate, changes):
         pass
@@ -55,20 +58,19 @@ class NotificationPlugin(Component):
     def _only_owner_changed(self):
         return self._get_bool_config('only_owner_changed')
 
-    def _post_info(self, session_id, ticket, body):
+    def _build_info_message(self, body, ticket):
         trac_base_url = self.config.get('trac', 'base_url')
         self.log.debug("trac_base_url: %s", trac_base_url)
-        self._post_message(session_id,
-                           "[info][title]#{id} {summary}[/title]{body}\n\n{trac_base_url}/ticket/{id}[/info]".format(
-                               id=ticket.id,
-                               summary=ticket['summary'],
-                               body=body,
-                               trac_base_url=trac_base_url))
+        return "[info][title]#{id} {summary}[/title]{body}\n\n{trac_base_url}/ticket/{id}[/info]".format(
+            id=ticket.id, summary=ticket['summary'], body=body, trac_base_url=trac_base_url)
 
-    def _post_message(self, session_id, message):
+    def _post_info(self, contributor, ticket, body):
+        self._post_message(contributor, self._build_info_message(body, ticket))
+
+    def _post_message(self, contributor, message):
         api_base_url = self._get_config('api_base_url')
         self.log.debug("api_base_url: %s", api_base_url)
-        api_token = self._get_api_token(session_id)
+        api_token = self._get_api_token(contributor)
         self.log.debug("api_token: %s", api_token)
         room_id = self._get_config('room_id')
         self.log.debug("room_id: %s", room_id)
