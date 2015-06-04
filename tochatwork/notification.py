@@ -13,7 +13,7 @@ class NotificationPlugin(Component):
     implements(ITicketChangeListener)
 
     def ticket_created(self, ticket):
-        self._post_info(ticket, """チケットが登録されました 報告者: {reporter} 担当者: {owner}
+        self._post_info(ticket['reporter'], ticket, """チケットが登録されました 報告者: {reporter} 担当者: {owner}
 
 {description}""".format(reporter=ticket['reporter'], owner=ticket['owner'], description=ticket['description']))
 
@@ -21,7 +21,7 @@ class NotificationPlugin(Component):
         if not self._should_notify(ticket, comment, author, old_values):
             return
 
-        self._post_info(ticket, """チケットが更新されました 更新者: {author} 担当者: {owner} ステータス: {status}
+        self._post_info(author, ticket, """チケットが更新されました 更新者: {author} 担当者: {owner} ステータス: {status}
 
 {comment}""".format(author=author, owner=ticket['owner'], comment=comment, status=ticket['status']))
 
@@ -29,7 +29,7 @@ class NotificationPlugin(Component):
         pass
 
     def ticket_comment_modified(self, ticket, cdate, author, comment, old_comment):
-        self._post_info(ticket, """チケットのコメントが更新されました 更新者: {author} 担当者: {owner}
+        self._post_info(author, ticket, """チケットのコメントが更新されました 更新者: {author} 担当者: {owner}
 
 {comment}""".format(author=author, owner=ticket['owner'], comment=comment))
 
@@ -55,19 +55,20 @@ class NotificationPlugin(Component):
     def _only_owner_changed(self):
         return self._get_bool_config('only_owner_changed')
 
-    def _post_info(self, ticket, body):
+    def _post_info(self, session_id, ticket, body):
         trac_base_url = self.config.get('trac', 'base_url')
         self.log.debug("trac_base_url: %s", trac_base_url)
-        self._post_message("[info][title]#{id} {summary}[/title]{body}\n\n{trac_base_url}/ticket/{id}[/info]".format(
-            id=ticket.id,
-            summary=ticket['summary'],
-            body=body,
-            trac_base_url=trac_base_url))
+        self._post_message(session_id,
+                           "[info][title]#{id} {summary}[/title]{body}\n\n{trac_base_url}/ticket/{id}[/info]".format(
+                               id=ticket.id,
+                               summary=ticket['summary'],
+                               body=body,
+                               trac_base_url=trac_base_url))
 
-    def _post_message(self, message):
+    def _post_message(self, session_id, message):
         api_base_url = self._get_config('api_base_url')
         self.log.debug("api_base_url: %s", api_base_url)
-        api_token = self._get_config('api_token')
+        api_token = self._get_api_token(session_id)
         self.log.debug("api_token: %s", api_token)
         room_id = self._get_config('room_id')
         self.log.debug("room_id: %s", room_id)
@@ -76,6 +77,19 @@ class NotificationPlugin(Component):
             data={'body': message},
             headers={'X-ChatWorkToken': api_token})
         self.log.debug("response: %s", res.text)
+
+    def _get_api_token(self, session_id):
+        self.log.debug("session_id: %s", session_id)
+        with self.env.get_read_db() as db:
+            for row in db.execute(
+                    "SELECT value FROM session_attribute WHERE sid = :session_id AND name = 'chatwork_api_token'",
+                    {'session_id': session_id}):
+                token, = row
+                self.log.debug("chatwork_api_token: %s", token)
+                if token != '':
+                    return token
+
+        return self._get_config('api_token')
 
     def _get_config(self, key):
         return self.config.get(CONFIG_SECTION, key)
