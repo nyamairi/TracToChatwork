@@ -20,4 +20,7 @@ only_owner_changed = true|false
 
 # force notification if included in the comments
 notify_symbol = @cw
+
+# account custom field name for api token
+api_token_field_name = chatwork_api_token
 ```
