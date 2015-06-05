@@ -113,10 +113,16 @@ class NotificationPlugin(Component):
 
     def _get_api_token(self, session_id):
         self.log.debug("session_id: %s", session_id)
+
+        field_name = self._get_config('api_token_field_name', '')
+        self.log.debug("field_name: %s", field_name)
+        if field_name == '':
+            return ''
+
         with self.env.get_read_db() as db:
             for row in db.execute(
-                    "SELECT value FROM session_attribute WHERE sid = :session_id AND name = 'chatwork_api_token'",
-                    {'session_id': session_id}):
+                    "SELECT value FROM session_attribute WHERE sid = :session_id AND name = :field_name",
+                    {'session_id': session_id, 'field_name': field_name}):
                 token, = row
                 self.log.debug("chatwork_api_token: %s", token)
                 if token != '':
@@ -131,8 +137,8 @@ class NotificationPlugin(Component):
 
         return self._get_config('api_token')
 
-    def _get_config(self, key):
-        return self.config.get(CONFIG_SECTION, key)
+    def _get_config(self, key, default=''):
+        return self.config.get(CONFIG_SECTION, key, default)
 
     def _get_bool_config(self, key, default=''):
         return self.config.getbool(CONFIG_SECTION, key, default)
