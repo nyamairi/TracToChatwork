@@ -1,0 +1,47 @@
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+<xi:include href="admin.html"/>
+<head>
+    <title>ToChatwork</title>
+</head>
+<body>
+<h2>ToChatwork Settings</h2>
+
+<form class="mod" id="modbasic" method="post" action="">
+    <fieldset>
+        <legend>Notification</legend>
+        <div class="field">
+            <label for="api_base_url">Chatwork API Base URL (required):</label>
+            <input type="text" id="api_base_url" name="api_base_url" value="${api_base_url}"/>
+        </div>
+        <div class="field">
+            <label for="api_token">Notification account API Token(required):</label>
+            <input type="text" id="api_token" name="api_token" value="${api_token}"/>
+        </div>
+        <div class="field">
+            <label for="room_id">Notification room ID (required):</label>
+            <input type="text" id="room_id" name="room_id" value="${room_id}"/>
+        </div>
+        <div class="field">
+            <label for="only_owner_changed">Notify only when ticket owner has been changed (default: false):</label>
+            <input type="text" id="only_owner_changed" name="only_owner_changed" value="${only_owner_changed}"/>
+        </div>
+        <div class="field">
+            <label for="notify_symbol">Force notification if included in the comments:</label>
+            <input type="text" id="notify_symbol" name="notify_symbol" value="${notify_symbol}"/>
+        </div>
+        <div class="field">
+            <label for="api_token_field_name">Account custom field name for API Token:</label>
+            <input type="text" id="api_token_field_name" name="api_token_field_name" value="${api_token_field_name}"/>
+        </div>
+    </fieldset>
+    <div class="buttons">
+        <input type="submit" value="Apply changes"/>
+    </div>
+</form>
+</body>
+</html>
